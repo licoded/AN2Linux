@@ -5,7 +5,7 @@ Description=AN2Linux
 Type=simple
 StandardOutput=null
 Restart=on-failure
-ExecStart=<path_to_an2linuxserver.py>
+ExecStart=/home/lic/apps/an2linuxserver/an2linuxserver.py
 
 [Install]
 WantedBy=default.target

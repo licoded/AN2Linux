@@ -53,6 +53,10 @@ import select
 import re
 from collections import deque
 
+from loguru import logger
+
+LOG_FILEPATH = '/home/lic/apps/an2linuxserver/logs/vivo-notification.txt'
+logger.add(LOG_FILEPATH, colorize=True, format="<green>{time}</green> <level>{message}</level>",rotation='1 MB')
 
 class Notification:
 
@@ -77,6 +81,7 @@ class Notification:
                                          + icon_bytes if icon_bytes is not None else b'').digest()
 
     def show(self):
+        logger.info('\n' + self.title + '\n\t' + self.message)
         if (self.notif_hash not in Notification.latest_notifications
             or self.title in Notification.titles_that_ignore_latest) \
           and not any(kw in self.title for kw in Notification.keywords_to_ignore if kw != '') \
