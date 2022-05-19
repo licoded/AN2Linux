@@ -6,7 +6,7 @@
 # special exception to link portions of this program with the OpenSSL library.
 #
 # See LICENSE for more details.
-
+from app import displayNotification
 import logging
 import sys
 try:
@@ -54,9 +54,11 @@ import re
 from collections import deque
 
 from loguru import logger
+logger.add("size.log", rotation="1 MB")
 
-LOG_FILEPATH = '/home/lic/apps/an2linuxserver/logs/vivo-notification.txt'
-logger.add(LOG_FILEPATH, colorize=True, format="<green>{time}</green> <level>{message}</level>",rotation='1 MB')
+def log(title, message):
+    logStr = '\n'.join(['', title, message])
+    logger.info(logStr)
 
 class Notification:
 
@@ -81,28 +83,34 @@ class Notification:
                                          + icon_bytes if icon_bytes is not None else b'').digest()
 
     def show(self):
-        logger.info('\n' + self.title + '\n\t' + self.message)
         if (self.notif_hash not in Notification.latest_notifications
             or self.title in Notification.titles_that_ignore_latest) \
           and not any(kw in self.title for kw in Notification.keywords_to_ignore if kw != '') \
           and not any(regex.match(self.title) for regex in Notification.regexes_to_ignore_in_title) \
           and not any(regex.match(self.message) for regex in Notification.regexes_to_ignore_in_content):
             Notification.latest_notifications.append(self.notif_hash)
-            self.notif = Notify.Notification.new(self.title, self.message, '')
-            self.notif.set_timeout(notification_timeout_milliseconds)
-            self.notif.set_hint('desktop-entry', GLib.Variant('s', 'an2linux'))
-            if self.icon_bytes is not None:
-                pixbuf_loader = GdkPixbuf.PixbufLoader.new()
-                pixbuf_loader.write(self.icon_bytes)
-                pixbuf_loader.close()
-                self.notif.set_image_from_pixbuf(pixbuf_loader.get_pixbuf())
-            try:
-                self.notif.show()
-            except Exception as e:
-                logging.error('(Notification) Error showing notification:' \
-                              ' {}'.format(e));
-                logging.error('Please make sure you have a notification' \
-                              ' server installed on your system')
+            log(self.title, self.message)
+            displayNotification(
+                message=self.message,
+                title=self.title,
+                subtitle=None,
+                soundname="Pop",
+            )
+            # self.notif = Notify.Notification.new(self.title, self.message, '')
+            # self.notif.set_timeout(notification_timeout_milliseconds)
+            # self.notif.set_hint('desktop-entry', GLib.Variant('s', 'an2linux'))
+            # if self.icon_bytes is not None:
+            #     pixbuf_loader = GdkPixbuf.PixbufLoader.new()
+            #     pixbuf_loader.write(self.icon_bytes)
+            #     pixbuf_loader.close()
+            #     self.notif.set_image_from_pixbuf(pixbuf_loader.get_pixbuf())
+            # try:
+            #     self.notif.show()
+            # except Exception as e:
+            #     logging.error('(Notification) Error showing notification:' \
+            #                   ' {}'.format(e));
+            #     logging.error('Please make sure you have a notification' \
+            #                   ' server installed on your system')
 
 
 class TCPHandler(socketserver.BaseRequestHandler):
